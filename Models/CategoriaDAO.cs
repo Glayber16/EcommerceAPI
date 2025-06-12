@@ -1,19 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
-using Npgsql; // Certifique-se de adicionar o pacote Npgsql via NuGet
-using Modelo.Categoria;
+using Npgsql;
+using EcommerceAPI.Models;
 
-namespace Modelo
+namespace EcommerceAPI.DataAccess
 {
     public class CategoriaDAO
     {
         private const string CONNECTION_STRING = "Host=localhost;Port=5432;Username=postgres;Password=ufc123;Database=smdecommerce";
 
-        /// <summary>
-        /// Método para listar todas as categorias existentes
-        /// </summary>
-        /// <returns>Lista de categorias</returns>
         public List<Categoria> Listar()
         {
             List<Categoria> categorias = new List<Categoria>();
@@ -31,7 +26,7 @@ namespace Modelo
                             Categoria categoria = new Categoria
                             {
                                 Id = reader.GetInt32(0),
-                                Descricao = reader.GetString(1)
+                                descricao = reader.GetString(1)
                             };
                             categorias.Add(categoria);
                         }
@@ -46,11 +41,6 @@ namespace Modelo
             return categorias;
         }
 
-        /// <summary>
-        /// Método para inserir uma nova categoria
-        /// </summary>
-        /// <param name="descricao">Descrição da categoria</param>
-        /// <returns>True se a inserção for bem-sucedida</returns>
         public bool Inserir(string descricao)
         {
             bool sucesso = false;

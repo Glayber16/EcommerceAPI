@@ -7,63 +7,34 @@ namespace EcommerceAPI.DataAccess
 {
     public class UsuarioDAO
     {
-        private const string CONNECTION_STRING = "Host=localhost;Port=5432;Username=postgres;Password=ufc123;Database=smdecommerce";
+        private const string CONNECTION_STRING = "Host=localhost;Port=5432;Username=glayber_ecommerce;Password=glayber;Database=smdecommerce";
 
-        public bool InserirCliente(string nome, string endereco, string email, string login, string senha)
+      public bool InserirUsuario(Usuario usuario)
+{
+    try
+    {
+        using (var conn = new NpgsqlConnection(CONNECTION_STRING))
         {
-            bool sucesso = false;
-
-            try
+            conn.Open();
+            using (var cmd = new NpgsqlCommand("INSERT INTO usuario (nome, endereco, email, login, senha, administrador) VALUES (@nome, @endereco, @email, @login, @senha, @adm)", conn))
             {
-                using (var conn = new NpgsqlConnection(CONNECTION_STRING))
-                {
-                    conn.Open();
-                    using (var cmd = new NpgsqlCommand("INSERT INTO usuario (nome, endereco, email, login, senha, administrador) VALUES (@nome, @endereco, @email, @login, @senha, FALSE)", conn))
-                    {
-                        cmd.Parameters.AddWithValue("@nome", nome);
-                        cmd.Parameters.AddWithValue("@endereco", endereco);
-                        cmd.Parameters.AddWithValue("@email", email);
-                        cmd.Parameters.AddWithValue("@login", login);
-                        cmd.Parameters.AddWithValue("@senha", senha);
-                        sucesso = (cmd.ExecuteNonQuery() == 1);
-                    }
-                }
+                cmd.Parameters.AddWithValue("@nome", usuario.Nome);
+                cmd.Parameters.AddWithValue("@endereco", usuario.Endereco);
+                cmd.Parameters.AddWithValue("@email", usuario.Email);
+                cmd.Parameters.AddWithValue("@login", usuario.Login);
+                cmd.Parameters.AddWithValue("@senha", usuario.Senha);
+                cmd.Parameters.AddWithValue("@adm", usuario.Adm);
+                return cmd.ExecuteNonQuery() == 1;
             }
-            catch
-            {
-                sucesso = false;
-            }
-
-            return sucesso;
         }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao inserir usuário: {ex.Message}");
+        return false;
+    }
+}
 
-        public bool InserirAdministrador(string nome, string endereco, string email, string login, string senha)
-        {
-            bool sucesso = false;
-
-            try
-            {
-                using (var conn = new NpgsqlConnection(CONNECTION_STRING))
-                {
-                    conn.Open();
-                    using (var cmd = new NpgsqlCommand("INSERT INTO usuario (nome, endereco, email, login, senha, administrador) VALUES (@nome, @endereco, @email, @login, @senha, TRUE)", conn))
-                    {
-                        cmd.Parameters.AddWithValue("@nome", nome);
-                        cmd.Parameters.AddWithValue("@endereco", endereco);
-                        cmd.Parameters.AddWithValue("@email", email);
-                        cmd.Parameters.AddWithValue("@login", login);
-                        cmd.Parameters.AddWithValue("@senha", senha);
-                        sucesso = (cmd.ExecuteNonQuery() == 1);
-                    }
-                }
-            }
-            catch
-            {
-                sucesso = false;
-            }
-
-            return sucesso;
-        }
 
         public Usuario? Obter(string login, string senha)
         {
@@ -158,6 +129,52 @@ namespace EcommerceAPI.DataAccess
             }
 
             return sucesso;
+        }
+
+
+        public List<Usuario> ObterTodos()
+        {
+            List<Usuario> usuarios = new List<Usuario>();
+
+            try
+            {
+                using (var conn = new NpgsqlConnection(CONNECTION_STRING)) 
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT id, nome, endereco, email, login, senha, administrador FROM usuario", conn))
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read()) 
+                            {
+                                usuarios.Add(new Usuario
+                                {
+                                    Id = reader.GetInt32(0),
+                                    Nome = reader.GetString(1),
+                                    Endereco = reader.GetString(2),
+                                    Email = reader.GetString(3),
+                                    Login = reader.GetString(4),
+                                    Senha = reader.GetString(5), 
+                                    Adm = reader.GetBoolean(6)
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (NpgsqlException ex)
+            {
+                Console.Error.WriteLine($"Erro de banco de dados ao obter todos os usuários: {ex.Message}");
+               
+                return new List<Usuario>();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Ocorreu um erro inesperado ao obter todos os usuários: {ex.Message}");
+                return new List<Usuario>(); 
+            }
+
+            return usuarios;
         }
     }
 }
