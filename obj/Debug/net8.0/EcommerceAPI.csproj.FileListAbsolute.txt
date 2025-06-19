@@ -47,3 +47,5 @@ C:\Users\Documentos\Desktop\Apis\EcommerceAPI\obj\Debug\net8.0\refint\EcommerceA
 C:\Users\Documentos\Desktop\Apis\EcommerceAPI\obj\Debug\net8.0\EcommerceAPI.pdb
 C:\Users\Documentos\Desktop\Apis\EcommerceAPI\obj\Debug\net8.0\EcommerceAPI.genruntimeconfig.cache
 C:\Users\Documentos\Desktop\Apis\EcommerceAPI\obj\Debug\net8.0\ref\EcommerceAPI.dll
+C:\Users\Documentos\Desktop\Apis\EcommerceAPI\bin\Debug\net8.0\DotNetEnv.dll
+C:\Users\Documentos\Desktop\Apis\EcommerceAPI\bin\Debug\net8.0\Sprache.dll

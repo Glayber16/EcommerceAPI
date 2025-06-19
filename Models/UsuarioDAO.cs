@@ -7,7 +7,12 @@ namespace EcommerceAPI.DataAccess
 {
     public class UsuarioDAO
     {
-        private const string CONNECTION_STRING = "Host=localhost;Port=5432;Username=glayber_ecommerce;Password=glayber;Database=smdecommerce";
+        private readonly string CONNECTION_STRING = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
+                                            $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+                                            $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
+                                            $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+                                            $"Database={Environment.GetEnvironmentVariable("DB_NAME")};";
+
 
       public bool InserirUsuario(Usuario usuario)
 {

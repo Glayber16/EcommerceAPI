@@ -26,16 +26,17 @@ namespace EcommerceAPI.Controllers
                 return BadRequest("Erro ao cadastrar usuário.");
         }
 
-        [HttpPost("login")]
-        public ActionResult<Usuario> Login([FromBody] Usuario usuario)
+      [HttpPost("login")]
+        public ActionResult<Usuario> Login([FromBody] LoginDTO loginDTO)
         {
-            var encontrado = _dao.Obter(usuario.Login, usuario.Senha);
+            var encontrado = _dao.Obter(loginDTO.Login, loginDTO.Senha);
 
             if (encontrado is null)
                 return Unauthorized("Login ou senha inválidos.");
-
+    
             return Ok(encontrado);
         }
+
 
         [HttpPut("{id}")]
         public IActionResult Atualizar(int id, [FromBody] Usuario usuario)
