@@ -7,11 +7,11 @@ namespace EcommerceAPI.DataAccess
 {
     public class CategoriaDAO
     {
-       private readonly string CONNECTION_STRING = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
-                                            $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
-                                            $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
-                                            $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
-                                            $"Database={Environment.GetEnvironmentVariable("DB_NAME")};";
+        private readonly string CONNECTION_STRING = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
+                                             $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+                                             $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
+                                             $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+                                             $"Database={Environment.GetEnvironmentVariable("DB_NAME")};";
 
 
         public List<Categoria> Listar()
@@ -69,5 +69,57 @@ namespace EcommerceAPI.DataAccess
 
             return sucesso;
         }
+
+        public bool Remover(int id)
+        {
+            bool sucesso = false;
+
+            try
+            {
+                using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("DELETE FROM categoria WHERE id = @id", conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", id);
+                        sucesso = (cmd.ExecuteNonQuery() == 1);
+                    }
+                }
+            }
+            catch
+            {
+                sucesso = false;
+            }
+
+            return sucesso;
+        }
+        
+          public bool Atualizar(string descricao, int id)
+        {
+            bool sucesso = false;
+
+            try
+            {
+                using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("UPDATE categoria SET descricao = @descricao  WHERE id = @id", conn))
+                    {
+                        cmd.Parameters.AddWithValue("@descricao", descricao);
+                        
+                        cmd.Parameters.AddWithValue("@id", id);
+
+                        sucesso = (cmd.ExecuteNonQuery() == 1);
+                    }
+                }
+            }
+            catch
+            {
+                sucesso = false;
+            }
+
+            return sucesso;
+        }
+
     }
 }

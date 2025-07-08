@@ -7,7 +7,9 @@ namespace EcommerceAPI.Models
         public int Id { get; set; }
          [Required]
         public string Modelo { get; set; } = string.Empty;
-         [Required]
+        [Required]
+        public Categoria categoria { get; set; }
+        
         public string Marca { get; set; } = string.Empty;
          [Required]
         public decimal Preco { get; set; }
