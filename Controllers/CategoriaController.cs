@@ -16,14 +16,12 @@ namespace EcommerceAPI.Controllers
             _dao = new CategoriaDAO();
         }
 
-
         [HttpGet]
         public ActionResult<List<Categoria>> ListarCategorias()
         {
             var categorias = _dao.Listar();
             return Ok(categorias);
         }
-
 
         [HttpPost]
         public ActionResult Inserir([FromBody] Categoria categoria)
@@ -42,6 +40,7 @@ namespace EcommerceAPI.Controllers
 
             return StatusCode(500, "Erro ao inserir a categoria.");
         }
+
         [HttpDelete("{id}")]
         public ActionResult Deletar(int id)
         {
@@ -52,7 +51,7 @@ namespace EcommerceAPI.Controllers
             else
                 return NotFound("categoria não encontrada.");
         }
-        
+
         [HttpPut("{id}")]
         public IActionResult Atualizar(int id, [FromBody] Categoria categoria)
         {
@@ -65,6 +64,17 @@ namespace EcommerceAPI.Controllers
                 return Ok("Categoria atualizada.");
             else
                 return NotFound("Categoria não encontrada.");
+        }
+
+        [HttpGet("buscar")]
+        public ActionResult<List<Categoria>> Buscar([FromQuery] string descricao)
+        {
+            var resultado = _dao.BuscarPorDescricao(descricao);
+
+            if (resultado.Count == 0)
+                return NotFound("Nenhuma categoria encontrada com essa descrição.");
+
+            return Ok(resultado);
         }
     }
 }

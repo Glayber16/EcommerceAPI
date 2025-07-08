@@ -8,11 +8,10 @@ namespace EcommerceAPI.DataAccess
     public class CategoriaDAO
     {
         private readonly string CONNECTION_STRING = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
-                                             $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
-                                             $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
-                                             $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
-                                             $"Database={Environment.GetEnvironmentVariable("DB_NAME")};";
-
+                                                    $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+                                                    $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
+                                                    $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+                                                    $"Database={Environment.GetEnvironmentVariable("DB_NAME")};";
 
         public List<Categoria> Listar()
         {
@@ -93,8 +92,8 @@ namespace EcommerceAPI.DataAccess
 
             return sucesso;
         }
-        
-          public bool Atualizar(string descricao, int id)
+
+        public bool Atualizar(string descricao, int id)
         {
             bool sucesso = false;
 
@@ -103,10 +102,9 @@ namespace EcommerceAPI.DataAccess
                 using (var conn = new NpgsqlConnection(CONNECTION_STRING))
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("UPDATE categoria SET descricao = @descricao  WHERE id = @id", conn))
+                    using (var cmd = new NpgsqlCommand("UPDATE categoria SET descricao = @descricao WHERE id = @id", conn))
                     {
                         cmd.Parameters.AddWithValue("@descricao", descricao);
-                        
                         cmd.Parameters.AddWithValue("@id", id);
 
                         sucesso = (cmd.ExecuteNonQuery() == 1);
@@ -121,5 +119,45 @@ namespace EcommerceAPI.DataAccess
             return sucesso;
         }
 
+        public List<Categoria> BuscarPorDescricao(string termo)
+        {
+            List<Categoria> categorias = new List<Categoria>();
+
+            try
+            {
+                using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+                {
+                    conn.Open();
+
+                    using (var cmd = new NpgsqlCommand(@"
+                        SELECT id, descricao
+                        FROM categoria
+                        WHERE LOWER(descricao) LIKE LOWER(@termo)", conn))
+                    {
+                        cmd.Parameters.AddWithValue("@termo", "%" + termo + "%");
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                var categoria = new Categoria
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("id")),
+                                    descricao = reader.GetString(reader.GetOrdinal("descricao"))
+                                };
+
+                                categorias.Add(categoria);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar categorias: {ex.Message}");
+            }
+
+            return categorias;
+        }
     }
 }

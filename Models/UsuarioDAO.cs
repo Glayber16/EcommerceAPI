@@ -8,37 +8,37 @@ namespace EcommerceAPI.DataAccess
     public class UsuarioDAO
     {
         private readonly string CONNECTION_STRING = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
-                                            $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
-                                            $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
-                                            $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
-                                            $"Database={Environment.GetEnvironmentVariable("DB_NAME")};";
+                                                    $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+                                                    $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
+                                                    $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+                                                    $"Database={Environment.GetEnvironmentVariable("DB_NAME")};";
 
 
-      public bool InserirUsuario(Usuario usuario)
-{
-    try
-    {
-        using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+        public bool InserirUsuario(Usuario usuario)
         {
-            conn.Open();
-            using (var cmd = new NpgsqlCommand("INSERT INTO usuario (nome, endereco, email, login, senha, administrador) VALUES (@nome, @endereco, @email, @login, @senha, @adm)", conn))
+            try
             {
-                cmd.Parameters.AddWithValue("@nome", usuario.Nome);
-                cmd.Parameters.AddWithValue("@endereco", usuario.Endereco);
-                cmd.Parameters.AddWithValue("@email", usuario.Email);
-                cmd.Parameters.AddWithValue("@login", usuario.Login);
-                cmd.Parameters.AddWithValue("@senha", usuario.Senha);
-                cmd.Parameters.AddWithValue("@adm", usuario.Adm);
-                return cmd.ExecuteNonQuery() == 1;
+                using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("INSERT INTO usuario (nome, endereco, email, login, senha, administrador) VALUES (@nome, @endereco, @email, @login, @senha, @adm)", conn))
+                    {
+                        cmd.Parameters.AddWithValue("@nome", usuario.Nome);
+                        cmd.Parameters.AddWithValue("@endereco", usuario.Endereco);
+                        cmd.Parameters.AddWithValue("@email", usuario.Email);
+                        cmd.Parameters.AddWithValue("@login", usuario.Login);
+                        cmd.Parameters.AddWithValue("@senha", usuario.Senha);
+                        cmd.Parameters.AddWithValue("@adm", usuario.Adm);
+                        return cmd.ExecuteNonQuery() == 1;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao inserir usuário: {ex.Message}");
+                return false;
             }
         }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Erro ao inserir usuário: {ex.Message}");
-        return false;
-    }
-}
 
 
         public Usuario? Obter(string login, string senha)
@@ -170,7 +170,7 @@ namespace EcommerceAPI.DataAccess
             catch (NpgsqlException ex)
             {
                 Console.Error.WriteLine($"Erro de banco de dados ao obter todos os usuários: {ex.Message}");
-               
+                
                 return new List<Usuario>();
             }
             catch (Exception ex)

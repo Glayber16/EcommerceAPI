@@ -50,5 +50,16 @@ namespace EcommerceAPI.Controllers
             else
                 return NotFound("Carro não encontrado.");
         }
+        [HttpGet("buscar")]
+        public ActionResult<List<Carro>> Buscar([FromQuery] string termo)
+        {
+            var resultado = _dao.Buscar(termo);
+
+            if (resultado.Count == 0)
+                return NotFound("Nenhum carro encontrado com esse modelo ou marca.");
+
+            return Ok(resultado);
+        }
+
     }
 }

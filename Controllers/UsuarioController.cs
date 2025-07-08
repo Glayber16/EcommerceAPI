@@ -26,17 +26,16 @@ namespace EcommerceAPI.Controllers
                 return BadRequest("Erro ao cadastrar usuário.");
         }
 
-      [HttpPost("login")]
+        [HttpPost("login")]
         public ActionResult<Usuario> Login([FromBody] LoginDTO loginDTO)
         {
             var encontrado = _dao.Obter(loginDTO.Login, loginDTO.Senha);
 
             if (encontrado is null)
                 return Unauthorized("Login ou senha inválidos.");
-    
+            
             return Ok(encontrado);
         }
-
 
         [HttpPut("{id}")]
         public IActionResult Atualizar(int id, [FromBody] Usuario usuario)
@@ -70,8 +69,8 @@ namespace EcommerceAPI.Controllers
         [HttpGet]
         public IActionResult ver ()
         {
-             var usuarios = _dao.ObterTodos();
-              if (usuarios == null || usuarios.Count == 0)
+            var usuarios = _dao.ObterTodos();
+            if (usuarios == null || usuarios.Count == 0)
             {
                 return NotFound("Nenhum usuário encontrado.");
             }
