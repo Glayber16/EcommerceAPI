@@ -230,6 +230,42 @@ namespace EcommerceAPI.DataAccess
 
     return vendas;
 }
+public bool Deletar(int vendaId)
+{
+    try
+    {
+        using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+        {
+            conn.Open();
+            using (var trans = conn.BeginTransaction())
+            {
+                using (var cmdItens = new NpgsqlCommand("DELETE FROM vendacarro WHERE vendaid = @vendaid", conn, trans))
+                {
+                    cmdItens.Parameters.AddWithValue("@vendaid", vendaId);
+                    cmdItens.ExecuteNonQuery();
+                }
+
+                using (var cmdVenda = new NpgsqlCommand("DELETE FROM venda WHERE id = @vendaid", conn, trans))
+                {
+                    cmdVenda.Parameters.AddWithValue("@vendaid", vendaId);
+                    int linhasAfetadas = cmdVenda.ExecuteNonQuery();
+                    if (linhasAfetadas == 0)
+                    {
+                        trans.Rollback();
+                        return false;
+                    }
+                }
+
+                trans.Commit();
+                return true;
+            }
+        }
+    }
+    catch
+    {
+        return false;
+    }
+}
 
     }
 }

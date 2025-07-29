@@ -36,6 +36,15 @@ namespace EcommerceAPI.Controllers
             return Ok(vendas);
         }
 
+        [HttpDelete("{id}")]
+        public IActionResult Deletar(int id)
+        {
+            var sucesso = _vendaDAO.Deletar(id);
+            if (!sucesso)
+                return NotFound();
+            return NoContent();
+        }
+
         [HttpGet("usuario/{usuarioId}")]
         public IActionResult ObterPorUsuario(int usuarioId)
         {
