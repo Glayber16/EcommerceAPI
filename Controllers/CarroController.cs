@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using EcommerceAPI.DataAccess;
 using EcommerceAPI.Models;
 using System.Collections.Generic;
+using System.IO;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace EcommerceAPI.Controllers
 {
@@ -10,10 +13,13 @@ namespace EcommerceAPI.Controllers
     public class CarroController : ControllerBase
     {
         private readonly CarroDAO _dao;
+        private readonly string _uploadFolderPath;
 
         public CarroController()
         {
             _dao = new CarroDAO();
+            _uploadFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            Directory.CreateDirectory(_uploadFolderPath);
         }
 
         [HttpGet]
@@ -34,21 +40,68 @@ namespace EcommerceAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Inserir([FromBody] Carro carro)
+        public async Task<ActionResult> Inserir([FromForm] CarroFormModel carroForm)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (carro.Categoria == null || carro.Categoria.Id <= 0)
+            if (carroForm.FotoArquivo == null || carroForm.FotoArquivo.Length == 0)
             {
-                ModelState.AddModelError("Categoria.Id", "O ID da Categoria é obrigatório e deve ser válido.");
+                ModelState.AddModelError("FotoArquivo", "A foto é obrigatória.");
                 return BadRequest(ModelState);
             }
 
-            if (_dao.Inserir(carro))
-                return Created("", carro);
-            else
-                return BadRequest("Erro ao inserir carro.");
+            string filePath = "";
+            string relativeUrl = "";
+
+            try
+            {
+                string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(carroForm.FotoArquivo.FileName);
+                filePath = Path.Combine(_uploadFolderPath, uniqueFileName);
+                relativeUrl = $"/uploads/{uniqueFileName}";
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await carroForm.FotoArquivo.CopyToAsync(stream);
+                }
+
+                var carro = new Carro
+                {
+                    Modelo = carroForm.Modelo,
+                    Marca = carroForm.Marca,
+                    Preco = carroForm.Preco,
+                    Quantidade = carroForm.Quantidade,
+                    Foto = relativeUrl,
+                    Categoria = new Categoria { Id = carroForm.CategoriaId }
+                };
+
+                if (carro.Categoria == null || carro.Categoria.Id <= 0)
+                {
+                    ModelState.AddModelError("Categoria.Id", "O ID da Categoria é obrigatório e deve ser válido.");
+                    if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+                    return BadRequest(ModelState);
+                }
+
+                if (_dao.Inserir(carro))
+                    return Created("", carro);
+                else
+                {
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                    return BadRequest("Erro ao inserir carro.");
+                }
+            }
+            catch (Exception ex)
+            {
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+                Console.Error.WriteLine($"Erro ao processar upload: {ex.Message}");
+                return StatusCode(500, "Erro interno ao processar a requisição.");
+            }
         }
 
         [HttpPut("{id}")]
@@ -90,5 +143,15 @@ namespace EcommerceAPI.Controllers
 
             return Ok(resultado);
         }
+    }
+
+    public class CarroFormModel
+    {
+        public string Modelo { get; set; }
+        public string Marca { get; set; }
+        public decimal Preco { get; set; }
+        public int Quantidade { get; set; }
+        public IFormFile FotoArquivo { get; set; }
+        public int CategoriaId { get; set; }
     }
 }

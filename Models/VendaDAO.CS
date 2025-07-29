@@ -2,8 +2,6 @@ using EcommerceAPI.Models;
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EcommerceAPI.DataAccess
 {
@@ -47,21 +45,11 @@ namespace EcommerceAPI.DataAccess
 
                         foreach (var item in venda.Itens)
                         {
-                            Carro carroNoEstoque;
+                            var carroNoEstoque = _carroDAO.ObterPorId(item.CarroId);
 
-                            carroNoEstoque = _carroDAO.ObterPorId(item.CarroId);
-
-                            if (carroNoEstoque == null)
+                            if (carroNoEstoque == null || carroNoEstoque.Quantidade < item.Quantidade)
                             {
                                 trans.Rollback();
-                                Console.Error.WriteLine($"Erro: Carro com ID {item.CarroId} não encontrado no estoque.");
-                                return false;
-                            }
-
-                            if (carroNoEstoque.Quantidade < item.Quantidade)
-                            {
-                                trans.Rollback();
-                                Console.Error.WriteLine($"Erro: Estoque insuficiente para o carro {carroNoEstoque.Modelo}. Disponível: {carroNoEstoque.Quantidade}, Solicitado: {item.Quantidade}");
                                 return false;
                             }
 
@@ -109,7 +97,9 @@ namespace EcommerceAPI.DataAccess
                     conn.Open();
 
                     var vendasDict = new Dictionary<int, Venda>();
-                    using (var cmdVendas = new NpgsqlCommand("SELECT id, data, usuarioid FROM venda", conn))
+                    using (var cmdVendas = new NpgsqlCommand(
+                        "SELECT v.id, v.data, v.usuarioid, u.nome, u.email " +
+                        "FROM venda v JOIN usuario u ON v.usuarioid = u.id", conn))
                     {
                         using (var readerVendas = cmdVendas.ExecuteReader())
                         {
@@ -120,8 +110,15 @@ namespace EcommerceAPI.DataAccess
                                     Id = readerVendas.GetInt32(0),
                                     data = readerVendas.GetDateTime(1),
                                     UsuarioId = readerVendas.GetInt32(2),
+                                    Usuario = new Usuario
+                                    {
+                                        Id = readerVendas.GetInt32(2),
+                                        Nome = readerVendas.GetString(3),
+                                        Email = readerVendas.GetString(4)
+                                    },
                                     Itens = new List<VendaCarro>()
                                 };
+
                                 vendas.Add(venda);
                                 vendasDict.Add(venda.Id, venda);
                             }
@@ -160,40 +157,79 @@ namespace EcommerceAPI.DataAccess
             return vendas;
         }
 
-        public List<Venda> ObterPorUsuario(int usuarioId)
-        {
-            List<Venda> vendas = new List<Venda>();
+           public List<Venda> ObterPorUsuario(int usuarioId)
+{
+    List<Venda> vendas = new List<Venda>();
+    var vendasDict = new Dictionary<int, Venda>();
 
-            try
+    try
+    {
+        using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+        {
+            conn.Open();
+
+            using (var cmd = new NpgsqlCommand(
+                "SELECT v.id, v.data, v.usuarioid, u.id AS usuario_id_map, u.nome AS usuario_nome " +
+                "FROM venda v JOIN usuario u ON v.usuarioid = u.id " +
+                "WHERE v.usuarioid = @usuarioid", conn))
             {
-                using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+                cmd.Parameters.AddWithValue("@usuarioid", usuarioId);
+
+                using (var reader = cmd.ExecuteReader())
                 {
-                    conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT id, data, usuarioid FROM venda WHERE usuarioid = @usuarioid", conn))
+                    while (reader.Read())
                     {
-                        cmd.Parameters.AddWithValue("@usuarioid", usuarioId);
-                        using (var reader = cmd.ExecuteReader())
+                        var venda = new Venda
                         {
-                            while (reader.Read())
+                            Id = reader.GetInt32(reader.GetOrdinal("id")),
+                            data = reader.GetDateTime(reader.GetOrdinal("data")),
+                            UsuarioId = reader.GetInt32(reader.GetOrdinal("usuarioid")),
+                            Usuario = new Usuario
                             {
-                                vendas.Add(new Venda
-                                {
-                                    Id = reader.GetInt32(0),
-                                    data = reader.GetDateTime(1),
-                                    UsuarioId = reader.GetInt32(2)
-                                });
-                            }
+                                Id = reader.GetInt32(reader.GetOrdinal("usuario_id_map")),
+                                Nome = reader.GetString(reader.GetOrdinal("usuario_nome")),
+                            },
+                            Itens = new List<VendaCarro>()
+                        };
+
+                        vendas.Add(venda);
+                        vendasDict[venda.Id] = venda; // <-- ESSA LINHA É FUNDAMENTAL
+                    }
+                }
+            }
+
+            using (var cmdItens = new NpgsqlCommand(
+                "SELECT id, vendaid, carroid, quantidade, preco FROM vendacarro", conn))
+            {
+                using (var readerItens = cmdItens.ExecuteReader())
+                {
+                    while (readerItens.Read())
+                    {
+                        var vendaId = readerItens.GetInt32(1);
+                        if (vendasDict.TryGetValue(vendaId, out var vendaParent))
+                        {
+                            vendaParent.Itens.Add(new VendaCarro
+                            {
+                                Id = readerItens.GetInt32(0),
+                                VendaId = vendaId,
+                                CarroId = readerItens.GetInt32(2),
+                                Quantidade = readerItens.GetInt32(3),
+                                Preco = readerItens.GetDecimal(4)
+                            });
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Erro ao obter vendas por usuário: {ex.Message}");
-                return new List<Venda>();
-            }
-
-            return vendas;
         }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Erro ao obter vendas por usuário: {ex.Message}");
+        return new List<Venda>();
+    }
+
+    return vendas;
+}
+
     }
 }

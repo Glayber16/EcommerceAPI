@@ -1,6 +1,7 @@
 using EcommerceAPI.DataAccess;
 using EcommerceAPI.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace EcommerceAPI.Controllers
 {
@@ -32,6 +33,16 @@ namespace EcommerceAPI.Controllers
         public IActionResult ObterTodas()
         {
             var vendas = _vendaDAO.ObterTodasComItens();
+            return Ok(vendas);
+        }
+
+        [HttpGet("usuario/{usuarioId}")]
+        public IActionResult ObterPorUsuario(int usuarioId)
+        {
+            var vendas = _vendaDAO.ObterPorUsuario(usuarioId);
+            if (vendas == null || vendas.Count == 0)
+                return NotFound("Nenhuma venda encontrada para este usuário.");
+
             return Ok(vendas);
         }
     }

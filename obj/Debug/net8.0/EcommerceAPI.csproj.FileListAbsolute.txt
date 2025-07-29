@@ -49,3 +49,4 @@ C:\Users\Documentos\Desktop\Apis\EcommerceAPI\obj\Debug\net8.0\EcommerceAPI.genr
 C:\Users\Documentos\Desktop\Apis\EcommerceAPI\obj\Debug\net8.0\ref\EcommerceAPI.dll
 C:\Users\Documentos\Desktop\Apis\EcommerceAPI\bin\Debug\net8.0\DotNetEnv.dll
 C:\Users\Documentos\Desktop\Apis\EcommerceAPI\bin\Debug\net8.0\Sprache.dll
+C:\Users\Documentos\Desktop\Apis\EcommerceAPI\bin\Debug\net8.0\EcommerceAPI.staticwebassets.runtime.json
