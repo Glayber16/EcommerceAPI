@@ -22,9 +22,29 @@ namespace EcommerceAPI.Controllers
             return Ok(_dao.Listar());
         }
 
+        [HttpGet("{id}")]
+        public ActionResult<Carro> ObterPorId(int id)
+        {
+            var carro = _dao.ObterPorId(id);
+
+            if (carro == null)
+                return NotFound($"Carro com ID {id} não encontrado.");
+
+            return Ok(carro);
+        }
+
         [HttpPost]
         public ActionResult Inserir([FromBody] Carro carro)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (carro.Categoria == null || carro.Categoria.Id <= 0)
+            {
+                ModelState.AddModelError("Categoria.Id", "O ID da Categoria é obrigatório e deve ser válido.");
+                return BadRequest(ModelState);
+            }
+
             if (_dao.Inserir(carro))
                 return Created("", carro);
             else
@@ -35,6 +55,15 @@ namespace EcommerceAPI.Controllers
         public ActionResult Atualizar(int id, [FromBody] Carro carro)
         {
             carro.Id = id;
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (carro.Categoria == null || carro.Categoria.Id <= 0)
+            {
+                ModelState.AddModelError("Categoria.Id", "O ID da Categoria é obrigatório e deve ser válido para atualização.");
+                return BadRequest(ModelState);
+            }
 
             if (_dao.Atualizar(carro))
                 return Ok("Carro atualizado com sucesso.");
@@ -50,6 +79,7 @@ namespace EcommerceAPI.Controllers
             else
                 return NotFound("Carro não encontrado.");
         }
+
         [HttpGet("buscar")]
         public ActionResult<List<Carro>> Buscar([FromQuery] string termo)
         {
@@ -60,6 +90,5 @@ namespace EcommerceAPI.Controllers
 
             return Ok(resultado);
         }
-
     }
 }

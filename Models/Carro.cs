@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
+using System.ComponentModel.DataAnnotations.Schema;
 namespace EcommerceAPI.Models
 {
     public class Carro
@@ -8,7 +9,11 @@ namespace EcommerceAPI.Models
          [Required]
         public string Modelo { get; set; } = string.Empty;
         [Required]
-        public Categoria categoria { get; set; }
+        
+        public int CategoriaId { get; set; } 
+
+        [ForeignKey("CategoriaId")]
+        public Categoria Categoria { get; set; }
         
         public string Marca { get; set; } = string.Empty;
          [Required]
